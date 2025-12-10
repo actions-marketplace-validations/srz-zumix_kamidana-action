@@ -10,13 +10,40 @@
   * [naming](https://github.com/podhmo/kamidana/blob/master/kamidana/additionals/naming.py)
   * [reader](https://github.com/podhmo/kamidana/blob/master/kamidana/additionals/reader.py)
 * kamidana-action additonals
-  * [io](additionals/io.py)
-    * basename
-    * dirname
+  * [color](additionals/color.py)
+    * is_success
+    * is_failure
+    * (as_global) status_success_color
+    * (as_global) status_failure_color
+    * (as_global) status_other_color
+    * actions_status_color
+    * status_color
+    * discord_color
   * [filter](additionals/filter.py)
     * ternary
     * b64encode
     * b64decode
+  * [github](additionals/github.py)
+    * get_user
+    * get_user_email
+  * [io](additionals/io.py)
+    * relativepath
+    * abspath
+    * basename
+    * dirname
+    * path_exists
+    * listdir
+    * listdir_files
+    * listdir_dirs
+  * [json](additionals/json.py)
+    * [json_query](https://jmespath.org/)
+      * [playground](https://play.jmespath.org/)
+    * json_dumps
+    * json_escape
+    * json_loads
+  * [to_yaml](additionals/to_yaml.py)
+    * to_yaml
+    * to_nice_yaml
 * user defined additionals
 
 ## Usage
@@ -31,12 +58,16 @@
 ```
 {%- endwith %}
 
-{% with name=".github/workflows/default-example.yml" -%}
-[{{ name | basename }}]({{ name }})
+{% with name="default-example.yml" -%}
+{% with path=".github/workflows/" ~ name -%}
+[{{ name }}]({{ path }})
 
 ```yaml
-{{ name | read_from_file(relative_self=False) | replace(replace_uses, replace_uses_to)| trim }}
+{{ path | read_from_file(relative_self=False) | replace(replace_uses, replace_uses_to)| trim }}
 ```
+
+[runs](https://github.com/srz-zumix/kamidana-action/actions/workflows/{{ name }})
+{%- endwith %}
 {%- endwith %}
 
 ### Variable / Data file Example
@@ -49,12 +80,16 @@
 ```
 {%- endwith %}
 
-{% with name=".github/workflows/variables-and-data-file-example.yml" -%}
-[{{ name | basename }}]({{ name }})
+{% with name="variables-and-multi-data-file-example.yml" -%}
+{% with path=".github/workflows/" ~ name -%}
+[{{ name }}]({{ path }})
 
 ```yaml
-{{ name | read_from_file(relative_self=False) | replace(replace_uses, replace_uses_to)| trim }}
+{{ path | read_from_file(relative_self=False) | replace(replace_uses, replace_uses_to)| trim }}
 ```
+
+[runs](https://github.com/srz-zumix/kamidana-action/actions/workflows/{{ name }})
+{%- endwith %}
 {%- endwith %}
 
 ### Additionals Example
@@ -75,12 +110,38 @@
 ```
 {%- endwith %}
 
-{% with name=".github/workflows/additionals-example.yml" -%}
-[{{ name | basename }}]({{ name }})
+{% with name="additionals-example.yml" -%}
+{% with path=".github/workflows/" ~ name -%}
+[{{ name }}]({{ path }})
 
 ```yaml
-{{ name | read_from_file(relative_self=False) | replace(replace_uses, replace_uses_to)| trim }}
+{{ path | read_from_file(relative_self=False) | replace(replace_uses, replace_uses_to)| trim }}
 ```
+
+[runs](https://github.com/srz-zumix/kamidana-action/actions/workflows/{{ name }})
+{%- endwith %}
+{%- endwith %}
+
+### IO Example
+
+{% with name="testdata/io-example.j2" -%}
+[{{ name | basename }}]({{ name }})
+
+```text
+{{ name | read_from_file(relative_self=False) | trim }}
+```
+{%- endwith %}
+
+{% with name="io-example.yml" -%}
+{% with path=".github/workflows/" ~ name -%}
+[{{ name }}]({{ path }})
+
+```yaml
+{{ path | read_from_file(relative_self=False) | replace(replace_uses, replace_uses_to)| trim }}
+```
+
+[runs](https://github.com/srz-zumix/kamidana-action/actions/workflows/{{ name }})
+{%- endwith %}
 {%- endwith %}
 
 ### Extensions Example
@@ -93,12 +154,16 @@
 ```
 {%- endwith %}
 
-{% with name=".github/workflows/extensions-example.yml" -%}
-[{{ name | basename }}]({{ name }})
+{% with name="extensions-example.yml" -%}
+{% with path=".github/workflows/" ~ name -%}
+[{{ name }}]({{ path }})
 
 ```yaml
-{{ name | read_from_file(relative_self=False) | replace(replace_uses, replace_uses_to)| trim }}
+{{ path | read_from_file(relative_self=False) | replace(replace_uses, replace_uses_to)| trim }}
 ```
+
+[runs](https://github.com/srz-zumix/kamidana-action/actions/workflows/{{ name }})
+{%- endwith %}
 {%- endwith %}
 
-[kamidana]:https://github.com/podhmo/kamidana
+[kamidana]:{{ links.kamidana }}

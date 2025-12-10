@@ -9,9 +9,12 @@ if [ "${INPUTS_DEBUG:-false}" = "true" ]; then
     set -x
 fi
 
-if [ -n "${INPUTS_DATA_FILE:-}" ]; then
-    KAMIDANA_OPTINOS+=(--data "${INPUTS_DATA_FILE}")
-fi
+# inputs data
+while IFS= read -r line || [ "$line" ]
+do
+    KAMIDANA_OPTINOS+=(--data "${line}")
+done < <(printf '%s' "${INPUTS_DATA_FILES:-}")
+
 if [ -n "${INPUTS_VARIABLES:-}" ] && [ -n "${INPUTS_INPUT_FORMAT:-}" ]; then
     KAMIDANA_OPTINOS+=(--input-format "${INPUTS_INPUT_FORMAT}")
 fi
@@ -21,23 +24,26 @@ ADITIONALS_OPTIONS+=(--additionals "kamidana.additionals.env")
 ADITIONALS_OPTIONS+=(--additionals "kamidana.additionals.naming")
 ADITIONALS_OPTIONS+=(--additionals "kamidana.additionals.reader")
 
-while IFS= read -r line
+while IFS= read -r line || [ "$line" ]
 do
     ADITIONALS_OPTIONS+=(--additionals "${line}")
 done < <(find "${GITHUB_ACTION_PATH:-.}/additionals" -name '*.py' -not -name '__init__.py')
 
 # inputs additionals
-while IFS= read -r line
+while IFS= read -r line || [ "$line" ]
 do
     ADITIONALS_OPTIONS+=(--additionals "${line}")
 done < <(printf '%s' "${INPUTS_ADDITONALS:-}")
 
-while IFS= read -r line
+while IFS= read -r line || [ "$line" ]
 do
     KAMIDANA_OPTINOS+=(--extension "${line}")
 done < <(printf '%s' "${INPUTS_EXTENSIONS:-}")
 
-OUTPUT_FILE=${INPUTS_OUTPUT_FILE:-kamidana-output.txt}
+OUTPUT_FILE=${INPUTS_OUTPUT_FILE:-/tmp/kamidana-output.txt}
+OUTPUT_DIR=$(dirname "${OUTPUT_FILE}")
+
+mkdir -p "${OUTPUT_DIR}" || python -c "import os; os.makedirs(\"${OUTPUT_DIR}\", exist_ok=True)" || :
 
 # github actions context
 
@@ -48,6 +54,15 @@ if [ -n "${GITHUB_CONTEXT:-}" ]; then
         echo '}'
     } > "${RUNNER_TEMP}/github.json"
     KAMIDANA_OPTINOS+=(--data "${RUNNER_TEMP}/github.json")
+fi
+
+if [ -n "${INPUTS_CONTEXT:-}" ]; then
+    {
+        echo '{ "inputs":'
+        echo "${INPUTS_CONTEXT}"
+        echo '}'
+    } > "${RUNNER_TEMP}/inputs.json"
+    KAMIDANA_OPTINOS+=(--data "${RUNNER_TEMP}/inputs.json")
 fi
 
 if [ -n "${JOB_CONTEXT:-}" ]; then
@@ -79,7 +94,11 @@ if [ "${INPUTS_DUMP_CONTEXT:-false}" = "true" ]; then
     KAMIDANA_OPTINOS+=(--dump-context)
     do_kamidana "$@"
 else
-    do_kamidana "$@" | tee "${OUTPUT_FILE}"
+    if [ "${INPUTS_TEE:-true}" == 'true' ]; then
+        do_kamidana "$@" | tee "${OUTPUT_FILE}"
+    else
+        do_kamidana "$@" > "${OUTPUT_FILE}"
+    fi
 
     if [ -n "${GITHUB_OUTPUT:-}" ]; then
         {

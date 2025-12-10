@@ -1,0 +1,9 @@
+{{ "." | abspath }}
+{{ "." | abspath | basename }}
+{{ "." | listdir }}
+{{ "." | listdir_files }}
+{{ "." | listdir_dirs }}
+{{ "LICENSE" | relativepath }}
+{% if ("LICENSE" | path_exists) %}
+    {{ "LICENSE" | read_from_file(relative_self=False) }}
+{% endif %}

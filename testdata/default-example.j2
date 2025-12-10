@@ -1,10 +1,22 @@
 {{ github.job }}
 {{ github.workflow }}
-{{ job.status }}
+{{ "ng" | status_color }}
+{{ job.status | outcome_color | discord_color }}
+{{ (github.actor | github_user).html_url }}
 {{ github.ref_protected | ternary('protected', '') }}
+{{ github.ref | regex_replace('refs/.*/(.*)', '\1') }}
 {{ github.ref_name | b64encode }}
 {{ github.ref | b64encode | b64decode }}
 {{ runner.name }} ({{ runner.os }}/{{ runner.arch }})
 {% set template_filename = github.workspace + "/testdata/default-example.j2" -%}
 {{ template_filename | basename }}
 {{ template_filename | read_from_file }}
+{%- for url in (github | json_query('[*.url,*.*.url,*.*.*.url] | [] | [] | []')) %}
+* {{ url }}
+{%- endfor %}
+{{ '日本語test\nです' | json_dumps(ensure_ascii=True) }}
+{{ '日本語test\nです' | json_dumps }}
+{{ '日本語test\nです' }}
+{{ 'repository.name = ' ~ (github.event | json_dumps | json_loads).repository.name }}
+
+{{ github | to_nice_yaml }}

@@ -1,4 +1,8 @@
-markupsafe==2.0.1
+markupsafe
 ruamel.yaml
-jinja2<3.0
-kamidana
+ruamel.yaml.string
+jinja2>=3.1
+kamidana>=0.10
+jmespath
+PyGithub
+colour

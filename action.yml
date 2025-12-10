@@ -15,8 +15,8 @@ inputs:
     description: 'To be used with the "variables" input, can be one of: yaml,json,toml,csv,tsv,raw,env,md,markdown,spreadsheet'
     default: yaml
     required: false
-  data_file:
-    description: 'Input data file, supported format: yaml,json,toml'
+  data_files:
+    description: 'Input data files, supported format: yaml,json,toml'
     required: false
   requirements:
     description: 'Additionals modules requirements.txt string'
@@ -27,9 +27,25 @@ inputs:
   additonals:
     description: 'Additionals modules'
     required: false
+  tee:
+    description: 'tee kamidana output'
+    default: false
+    required: false
   dump_context:
     description: 'dumping loading data'
     default: false
+    required: false
+  working-directory:
+    description: 'working directory'
+    default: ${{ github.workspace }}
+    required: false
+  python-version:
+    description: 'setup-python python-version. if empty, skip setup-python.'
+    default: '3.10'
+    required: false
+  github_token:
+    description: 'github token for github filter'
+    default: ${{ github.token }}
     required: false
   debug:
     description: 'enable kamidana debug'
@@ -45,19 +61,21 @@ runs:
   using: "composite"
   steps:
     - name: setup-python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
-        python-version: ${{ env.PYTHON_VERSION || '3.10' }}
-        cache: 'pip'
+        python-version: ${{ inputs.python-version }}
+        # cache: 'pip'
+        # cache-dependency-path: ${{ github.action_path  }}/requirements.txt
+      if: inputs.python-version != ''
     - name: pip install
       env:
         INPUTS_REQUIREMENTS: ${{ inputs.requirements }}
       shell: bash
       run: |
-        pip install -r ${GITHUB_ACTION_PATH}/requirements.txt
+        pip install --upgrade -r ${GITHUB_ACTION_PATH}/requirements.txt
         if [ -n "${INPUTS_REQUIREMENTS}" ]; then
           echo "${INPUTS_REQUIREMENTS}" > "${RUNNER_TEMP}/requirements.txt"
-          pip install -r "${RUNNER_TEMP}/requirements.txt"
+          pip install --upgrade -r "${RUNNER_TEMP}/requirements.txt"
         fi
     - name: kamidana
       shell: bash
@@ -67,15 +85,20 @@ runs:
         INPUTS_OUTPUT_FILE: ${{ inputs.output_file }}
         INPUTS_VARIABLES: ${{ inputs.variables }}
         INPUTS_INPUT_FORMAT: ${{ inputs.input_format }}
-        INPUTS_DATA_FILE: ${{ inputs.data_file }}
+        INPUTS_DATA_FILES: ${{ inputs.data_files }}
         INPUTS_EXTENSIONS: ${{ inputs.extensions }}
         INPUTS_ADDITONALS: ${{ inputs.additonals }}
+        INPUTS_TEE: ${{ inputs.tee }}
         INPUTS_DUMP_CONTEXT: ${{ inputs.dump_context }}
         INPUTS_DEBUG: ${{ inputs.debug }}
         GITHUB_CONTEXT: ${{ toJson(github) }}
+        INPUTS_CONTEXT: ${{ toJson(github.event.inputs) }}
         JOB_CONTEXT: ${{ toJson(job) }}
         RUNNER_CONTEXT: ${{ toJson(runner) }}
+        INPUTS_GITHUB_TOKEN: ${{ inputs.github_token }}
+        PYTHONUTF8: 1
       run: "${GITHUB_ACTION_PATH}/entorypoint.sh"
+      working-directory: ${{ inputs.working-directory }}
 
 branding:
   icon: 'sliders'
